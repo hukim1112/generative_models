@@ -33,6 +33,7 @@ import tarfile
 import numpy as np
 from six.moves import cPickle
 from six.moves import urllib
+import tarfile
 import tensorflow as tf
 
 from dataset.tfrecord_creator import tf_encoder
@@ -59,7 +60,7 @@ _CLASS_NAMES = [
     'ship',
     'truck',
 ]
-
+LABELS_FILENAME = 'labels.txt'
 
 def _add_to_tfrecord(filename, tfrecord_writer, offset=0):
   """Loads data from the cifar10 pickle files and writes files to a TFRecord.

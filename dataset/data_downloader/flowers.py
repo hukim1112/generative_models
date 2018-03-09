@@ -31,7 +31,8 @@ import math
 import os
 import random
 import sys
-
+from six.moves import urllib
+import tarfile
 import tensorflow as tf
 
 from dataset.tfrecord_creator import tf_encoder
@@ -142,7 +143,7 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir):
             class_name = os.path.basename(os.path.dirname(filenames[i]))
             class_id = class_names_to_ids[class_name]
 
-            example = dataset_utils.image_to_tfexample(
+            example = tf_encoder.image_to_tfexample(
                 image_data, b'jpg', height, width, class_id)
             tfrecord_writer.write(example.SerializeToString())
 
