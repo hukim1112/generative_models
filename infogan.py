@@ -1,4 +1,4 @@
-# nfoGAN is a technique to induce semantic meaning in the latent space of a GAN generator in an unsupervised way. In this example, the generator learns how to generate a specific digit without ever seeing labels. 
+# InfoGAN is a technique to induce semantic meaning in the latent space of a GAN generator in an unsupervised way. In this example, the generator learns how to generate a specific digit without ever seeing labels. 
 #This is achieved by maximizing the mutual information between some subset of the noise vector and the generated images, while also trying to generate realistic images. 
 #See InfoGAN: Interpretable Representation Learning by Information Maximizing Generative Adversarial Nets by Chen at al for more details.
 
@@ -23,16 +23,26 @@ from datasets.data_downloader import mnist
 from datasets.tfrecord_reader import tfrecord_reader
 from visualization import visual_gan
 from models.gan import info_gan
+import argparse
 
-
-
+parser = argparse.ArgumentParser()
+# parser.add_argument('-f', '--my-foo', default='foobar')
+# parser.add_argument('-b', '--bar-value', default=3.14)
+parser.add_argument('--checkpoint_path')
+parser.add_argument('--dataset_path')
+args = parser.parse_args()
 batch_size = 32
-checkpoint_path = '/home/dan/prj/weights/infogan'
+checkpoint_path = args.checkpoint_path
+dataset_path = args.dataset_path
+
+
+
+
 
 with tf.Graph().as_default():
 	
 	#1. Data pipeline
-	dataset = tfrecord_reader.get_split('mnist', 'train', '/home/dan/prj/datasets')
+	dataset = tfrecord_reader.get_split('mnist', 'train', dataset_path)
 	data_provider = slim.dataset_data_provider.DatasetDataProvider(
 	            dataset, common_queue_capacity=4*batch_size, common_queue_min=batch_size)    
 	[image, label] = data_provider.get(['image', 'label'])

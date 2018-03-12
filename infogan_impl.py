@@ -23,9 +23,18 @@ from datasets.data_downloader import mnist
 from datasets.tfrecord_reader import tfrecord_reader
 from visualization import visual_gan
 from models.gan import info_gan
+import argparse
 
+parser = argparse.ArgumentParser()
+# parser.add_argument('-f', '--my-foo', default='foobar')
+# parser.add_argument('-b', '--bar-value', default=3.14)
+parser.add_argument('--checkpoint_path')
+args = parser.parse_args()
 batch_size = 32
-checkpoint_path = '/home/dan/prj/weights/infogan'
+checkpoint_path = args.checkpoint_path
+
+
+
 
 with tf.Graph().as_default():
 	#1. Data pipeline
