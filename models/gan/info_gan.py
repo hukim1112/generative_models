@@ -41,6 +41,8 @@ def generator(inputs, categorical_dim, weight_decay=2.5e-5):
     
         return net
 
+ 
+
 def discriminator(img, unused_conditioning, weight_decay=2.5e-5,
                           categorical_dim=10, continuous_dim=2):
     """InfoGAN discriminator network on MNIST digits.
@@ -89,6 +91,9 @@ def discriminator(img, unused_conditioning, weight_decay=2.5e-5,
         q_cont = ds.Normal(loc=mu_cont, scale=sigma_cont)
 
         return logits_real, [q_cat, q_cont]
+
+
+
 
 
 def get_infogan_noise(batch_size, categorical_dim, structured_continuous_dim,

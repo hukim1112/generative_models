@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--checkpoint_path')
 parser.add_argument('--dataset_path')
 args = parser.parse_args()
-batch_size = 32
+batch_size = 128
 checkpoint_path = args.checkpoint_path
 dataset_path = args.dataset_path
 
@@ -108,7 +108,7 @@ with tf.Graph().as_default():
 		sess.run(tf.global_variables_initializer())
 		with slim.queues.QueueRunners(sess):
 			start_time = time.time()
-			for i in range(20001):
+			for i in range(20000):
 				cur_loss, _ = train_step_fn(
 				sess, gan_train_ops, global_step, train_step_kwargs={})
 				loss_values.append((i, cur_loss))
