@@ -77,25 +77,27 @@ with tf.Graph().as_default():
 	unstructured_inputs, structured_inputs = info_gan.get_infogan_noise(
 	    batch_size, cat_dim, cont_dim, noise_dims)
 
-	infogan_model = tfgan.infogan_model(
+	infogan_model = info_gan.infogan_model(
 	    generator_fn=generator_fn,
 	    discriminator_fn=discriminator_fn,
 	    real_data=images,
 	    unstructured_generator_inputs=unstructured_inputs,
 	    structured_generator_inputs=structured_inputs)
 
-	#4. display generated images
+	#4. classfication of images
+	
 	for noise in display_noises:
-	    with tf.variable_scope(infogan_model.generator_scope, reuse=True):
-	        display_images.append(infogan_model.generator_fn(noise))
+		print(len(noise))
+		with tf.variable_scope(infogan_model.discriminator_scope, reuse=True):
+		    logits_real, [q_cat, q_cont] = discriminator_fn(generator_fn(noise), None)
 
-	display_img = tfgan.eval.image_reshaper(
-	    tf.concat(display_images, 0), num_cols=10)
+
+
 
 	saver = tf.train.Saver()
 
 	with tf.Session() as sess:
 		with slim.queues.QueueRunners(sess):
 			saver.restore(sess, tf.train.latest_checkpoint(checkpoint_path))
-			plt.imshow(np.squeeze(sess.run(display_img)[0]), cmap='gray')
-			plt.show()
+			print('cat : ', sess.run(q_cat))
+			print('label : ', sess.run(labels))

@@ -26,8 +26,6 @@ from models.gan import info_gan
 import argparse
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('-f', '--my-foo', default='foobar')
-# parser.add_argument('-b', '--bar-value', default=3.14)
 parser.add_argument('--checkpoint_path')
 parser.add_argument('--dataset_path')
 args = parser.parse_args()
