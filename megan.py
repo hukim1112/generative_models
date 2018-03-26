@@ -53,6 +53,12 @@ with tf.Graph().as_default():
 	      capacity=2 * batch_size)
 	one_hot_labels = tf.one_hot(labels, dataset.num_classes)
 	
+	#Todo : take images for visual feature information
+	visual_feature_images = []
+	visual_feature_images['rotation'] = []
+	visual_feature_images['width'] = []
+
+
 	# Sanity check that we're getting images.
 	imgs_to_visualize = tfgan.eval.image_reshaper(images[:20,...], num_cols=10)
 	visual_gan.visualize_digits(imgs_to_visualize)
@@ -71,21 +77,24 @@ with tf.Graph().as_default():
 	unstructured_inputs, structured_inputs = info_gan.get_infogan_noise(
 	    batch_size, cat_dim, cont_dim, noise_dims)
 
+	#todo: megan_model need to be designed. It must have the part of visual feature check.
 	megan_model = tfgan.megan_model(
 	    generator_fn=generator_fn,
 	    discriminator_fn=discriminator_fn,
 	    real_data=images,
 	    unstructured_generator_inputs=unstructured_inputs,
-	    structured_generator_inputs=structured_inputs)
+	    structured_generator_inputs=structured_inputs,
+	    visual_feature = visual_feature_images)
 
 
 
-
+	#Todo : I need to design loss function for megan
 	#3. training op
 	infogan_loss = tfgan.gan_loss(
 	    infogan_model,
 	    gradient_penalty_weight=1.0,
-	    mutual_information_penalty_weight=1.0)
+	    mutual_information_penalty_weight=1.0,
+	    visual_feature_regularizer_weight=1.0)
 
 	# Sanity check that we can evaluate our losses.
 	visual_gan.evaluate_tfgan_loss(infogan_loss)

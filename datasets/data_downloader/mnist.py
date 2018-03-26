@@ -42,7 +42,7 @@ _TRAIN_DATA_FILENAME = 'train-images-idx3-ubyte.gz'
 _TRAIN_LABELS_FILENAME = 'train-labels-idx1-ubyte.gz'
 _TEST_DATA_FILENAME = 't10k-images-idx3-ubyte.gz'
 _TEST_LABELS_FILENAME = 't10k-labels-idx1-ubyte.gz'
-
+LABELS_FILENAME = 'labels.txt'
 _IMAGE_SIZE = 28
 _NUM_CHANNELS = 1
 
@@ -168,6 +168,20 @@ def _download_dataset(dataset_dir):
         size = f.size()
       print('Successfully downloaded', filename, size, 'bytes.')
 
+def write_label_file(labels_to_class_names, dataset_dir,
+                     filename=LABELS_FILENAME):
+  """Writes a file with the list of class names.
+
+  Args:
+    labels_to_class_names: A map of (integer) labels to class names.
+    dataset_dir: The directory in which the labels file should be written.
+    filename: The filename where the class names are written.
+  """
+  labels_filename = os.path.join(dataset_dir, filename)
+  with tf.gfile.Open(labels_filename, 'w') as f:
+    for label in labels_to_class_names:
+      class_name = labels_to_class_names[label]
+      f.write('%d:%s\n' % (label, class_name))
 
 def _clean_up_temporary_files(dataset_dir):
   """Removes temporary files used to create the dataset.
@@ -199,7 +213,7 @@ def run(dataset_dir):
     print('Dataset files already exist. Exiting without re-creating them.')
     return
 
-  _download_dataset(dataset_dir)
+  #_download_dataset(dataset_dir)
 
   # First, process the training data:
   with tf.python_io.TFRecordWriter(training_filename) as tfrecord_writer:
@@ -215,7 +229,7 @@ def run(dataset_dir):
 
   # Finally, write the labels file:
   labels_to_class_names = dict(zip(range(len(_CLASS_NAMES)), _CLASS_NAMES))
-  tf_encoder.write_label_file(labels_to_class_names, dataset_dir)
+  write_label_file(labels_to_class_names, dataset_dir)
 
   _clean_up_temporary_files(dataset_dir)
   print('\nFinished converting the MNIST dataset!')
