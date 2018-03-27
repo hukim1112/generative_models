@@ -90,19 +90,19 @@ with tf.Graph().as_default():
 
 	#Todo : I need to design loss function for megan
 	#3. training op
-	infogan_loss = tfgan.gan_loss(
+	megan_loss = tfgan.gan_loss(
 	    infogan_model,
 	    gradient_penalty_weight=1.0,
 	    mutual_information_penalty_weight=1.0,
 	    visual_feature_regularizer_weight=1.0)
 
 	# Sanity check that we can evaluate our losses.
-	visual_gan.evaluate_tfgan_loss(infogan_loss)
+	visual_gan.evaluate_tfgan_loss(megan_loss)
 	generator_optimizer = tf.train.AdamOptimizer(0.001, beta1=0.5)
 	discriminator_optimizer = tf.train.AdamOptimizer(0.00009, beta1=0.5)
 	gan_train_ops = tfgan.gan_train_ops(
 	    infogan_model,
-	    infogan_loss,
+	    megan_loss,
 	    generator_optimizer,
 	    discriminator_optimizer)
 
@@ -125,6 +125,6 @@ with tf.Graph().as_default():
 					print('Current loss: %f' % cur_loss)
 					if not tf.gfile.Exists(checkpoint_path):
 						tf.gfile.MakeDirs(checkpoint_path)
-					save_dir = os.path.join(checkpoint_path, "infogan"+'_'+str(i)+'.ckpt')
+					save_dir = os.path.join(checkpoint_path, "megan"+'_'+str(i)+'.ckpt')
 					saver.save(sess, save_dir)
 					print("Model saved in file: %s" % checkpoint_path)

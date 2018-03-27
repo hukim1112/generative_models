@@ -213,7 +213,7 @@ def run(dataset_dir):
     print('Dataset files already exist. Exiting without re-creating them.')
     return
 
-  #_download_dataset(dataset_dir)
+  _download_dataset(dataset_dir)
 
   # First, process the training data:
   with tf.python_io.TFRecordWriter(training_filename) as tfrecord_writer:
