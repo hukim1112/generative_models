@@ -22,7 +22,7 @@ ds = tf.contrib.distributions
 from datasets.data_downloader import mnist
 from datasets.tfrecord_reader import tfrecord_reader
 from visualization import visual_gan
-from models.gan import info_gan
+from models.gan import megan
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -32,9 +32,9 @@ args = parser.parse_args()
 batch_size = 128
 checkpoint_path = args.checkpoint_path
 dataset_path = args.dataset_path
+visual_feature_path = args.visual_feature_path
 
-
-
+keys = ['rotation', 'width']
 
 
 with tf.Graph().as_default():
@@ -54,10 +54,21 @@ with tf.Graph().as_default():
 	one_hot_labels = tf.one_hot(labels, dataset.num_classes)
 	
 	#Todo : take images for visual feature information
-	visual_feature_images = []
-	visual_feature_images['rotation'] = []
-	visual_feature_images['width'] = []
+	#complete!
 
+	visual_feature = {'rotation' : ['left', 'right'], 'width':['narrow', 'thick']}
+	visual_feature_path = '/home/dan/prj/lab/datasets/visual_feature_samples_multinumber'
+	visual_feature_images = {}
+
+	for key in visual_feature.keys():
+		visual_feature_images[key] = {}
+		for attribute in visual_feature[key]:
+			visual_feature_images[key][attribute] = []
+			path = os.path.join(visual_feature_path, key, attribute)
+			for img in os.listdir(path):
+				image = cv2.imread(os.path.join(path, img))
+				image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+				visual_feature_images[key][attribute].append(image)
 
 	# Sanity check that we're getting images.
 	imgs_to_visualize = tfgan.eval.image_reshaper(images[:20,...], num_cols=10)
@@ -68,16 +79,17 @@ with tf.Graph().as_default():
 	#2. model deploy
 
 	# Dimensions of the structured and unstructured noise dimensions.
+	#todo: megan_model need to be designed. It must have the part of visual feature check.
+	#complete : the part of tracing variant of visual feature is implemented. 
 	cat_dim, cont_dim, noise_dims = 10, 2, 64
 
-	generator_fn = functools.partial(info_gan.generator, categorical_dim=cat_dim)
+	generator_fn = functools.partial(megan.generator, categorical_dim=cat_dim)
 	discriminator_fn = functools.partial(
-	    info_gan.discriminator, categorical_dim=cat_dim,
+	    megan.discriminator, categorical_dim=cat_dim,
 	    continuous_dim=cont_dim)
-	unstructured_inputs, structured_inputs = info_gan.get_infogan_noise(
+	unstructured_inputs, structured_inputs = megan.get_infogan_noise(
 	    batch_size, cat_dim, cont_dim, noise_dims)
 
-	#todo: megan_model need to be designed. It must have the part of visual feature check.
 	megan_model = tfgan.megan_model(
 	    generator_fn=generator_fn,
 	    discriminator_fn=discriminator_fn,
@@ -91,7 +103,7 @@ with tf.Graph().as_default():
 	#Todo : I need to design loss function for megan
 	#3. training op
 	megan_loss = tfgan.gan_loss(
-	    infogan_model,
+	    megan_model,
 	    gradient_penalty_weight=1.0,
 	    mutual_information_penalty_weight=1.0,
 	    visual_feature_regularizer_weight=1.0)

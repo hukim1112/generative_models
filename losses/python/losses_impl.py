@@ -739,7 +739,7 @@ def mutual_information_penalty(
     structured_generator_inputs,
     predicted_distributions,
     weights=1.0,
-    scope='generator_modified_loss',
+    scope=None,
     loss_collection=ops.GraphKeys.LOSSES,
     reduction=losses.Reduction.SUM_BY_NONZERO_WEIGHTS,
     add_summaries=False):
@@ -776,6 +776,57 @@ def mutual_information_penalty(
 
   if add_summaries:
     summary.scalar('mutual_information_penalty', loss)
+
+  return loss
+
+
+def visual_feature_regularizer(
+    # structured_generator_inputs,
+    # predicted_distributions,
+    visual_features,
+    weights=1.0,
+    scope=None,
+    loss_collection=ops.GraphKeys.LOSSES,
+    reduction=losses.Reduction.SUM_BY_NONZERO_WEIGHTS,
+    add_summaries=False):
+  """Returns a penalty on the mutual information in an InfoGAN model.
+
+  This loss comes from an InfoGAN paper https://arxiv.org/abs/1606.03657.
+
+  Args:
+    structured_generator_inputs: A list of Tensors representing the random noise
+      that must  have high mutual information with the generator output. List
+      length should match `predicted_distributions`.
+    predicted_distributions: A list of tf.Distributions. Predicted by the
+      recognizer, and used to evaluate the likelihood of the structured noise.
+      List length should match `structured_generator_inputs`.
+    weights: Optional `Tensor` whose rank is either 0, or the same dimensions as
+      `structured_generator_inputs`.
+    scope: The scope for the operations performed in computing the loss.
+    loss_collection: collection to which this loss will be added.
+    reduction: A `tf.losses.Reduction` to apply to loss.
+    add_summaries: Whether or not to add summaries for the loss.
+
+  Returns:
+    A scalar Tensor representing the mutual information loss.
+  """
+  # _validate_information_penalty_inputs(
+  #     structured_generator_inputs, predicted_distributions)
+
+  #mutual information between visual feature and normal distribution to have myu 1 or -1
+  # Calculate the negative log-likelihood of the reconstructed noise.
+
+  # log_probs = [math_ops.reduce_mean(dist.log_prob(noise)) for dist, noise in
+  #              zip(predicted_distributions, structured_generator_inputs)]
+  
+  
+
+  loss = -1 * losses.compute_weighted_loss(
+      log_probs, weights, scope, loss_collection=loss_collection,
+      reduction=reduction)
+
+  if add_summaries:
+    summary.scalar('megan_loss', loss)
 
   return loss
 

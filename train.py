@@ -52,6 +52,7 @@ __all__ = [
     'gan_model',
     'infogan_model',
     'acgan_model',
+    'megan_model'
     'gan_loss',
     'gan_train_ops',
     'gan_train',
@@ -217,6 +218,109 @@ def infogan_model(
       predicted_distributions)
 
 
+def megan_model(
+    # Lambdas defining models.
+    generator_fn,
+    discriminator_fn,
+    # Real data and conditioning.
+    real_data,
+    unstructured_generator_inputs,
+    structured_generator_inputs,
+    # Optional scopes.
+    generator_scope='Generator',
+    discriminator_scope='Discriminator',
+    visual_feature_images):
+  """Returns an InfoGAN model outputs and variables.
+
+  See https://arxiv.org/abs/1606.03657 for more details.
+
+  Args:
+    generator_fn: A python lambda that takes a list of Tensors as inputs and
+      returns the outputs of the GAN generator.
+    discriminator_fn: A python lambda that takes `real_data`/`generated data`
+      and `generator_inputs`. Outputs a 2-tuple of (logits, distribution_list).
+      `logits` are in the range [-inf, inf], and `distribution_list` is a list
+      of Tensorflow distributions representing the predicted noise distribution
+      of the ith structure noise.
+    real_data: A Tensor representing the real data.
+    unstructured_generator_inputs: A list of Tensors to the generator.
+      These tensors represent the unstructured noise or conditioning.
+    structured_generator_inputs: A list of Tensors to the generator.
+      These tensors must have high mutual information with the recognizer.
+    generator_scope: Optional generator variable scope. Useful if you want to
+      reuse a subgraph that has already been created.
+    discriminator_scope: Optional discriminator variable scope. Useful if you
+      want to reuse a subgraph that has already been created.
+
+  Returns:
+    An InfoGANModel namedtuple.
+
+  Raises:
+    ValueError: If the generator outputs a Tensor that isn't the same shape as
+      `real_data`.
+    ValueError: If the discriminator output is malformed.
+  """
+  # Create models
+  with variable_scope.variable_scope(generator_scope) as gen_scope:
+    unstructured_generator_inputs = _convert_tensor_or_l_or_d(
+        unstructured_generator_inputs)
+    structured_generator_inputs = _convert_tensor_or_l_or_d(
+        structured_generator_inputs)
+    generator_inputs = (
+        unstructured_generator_inputs + structured_generator_inputs)
+    generated_data = generator_fn(generator_inputs)
+  with variable_scope.variable_scope(discriminator_scope) as disc_scope:
+    dis_gen_outputs, predicted_distributions, _ = discriminator_fn(
+        generated_data, generator_inputs)
+  _validate_distributions(predicted_distributions, structured_generator_inputs)
+  with variable_scope.variable_scope(disc_scope, reuse=True):
+    real_data = ops.convert_to_tensor(real_data)
+    dis_real_outputs, _ , _ = discriminator_fn(real_data, generator_inputs)
+
+  #visual feature for disentangled representation variance
+  with variable_scope.variable_scope(disc_scope, reuse=True):
+    visual_features = {}
+    i = 0
+    for key in visual_feature_images.keys():
+      visual_features[key] = {}
+      for attribute in visual_feature_images[key].keys()
+        visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
+        #convert image to tensor
+        _, _, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
+        visual_features[key][attribute] = mu_cont[i]
+
+
+  if not generated_data.get_shape().is_compatible_with(real_data.get_shape()):
+    raise ValueError(
+        'Generator output shape (%s) must be the same shape as real data '
+        '(%s).' % (generated_data.get_shape(), real_data.get_shape()))
+
+  # Get model-specific variables.
+  generator_variables = variables_lib.get_trainable_variables(gen_scope)
+  discriminator_variables = variables_lib.get_trainable_variables(
+      disc_scope)
+
+  return namedtuples.InfoGANModel(
+      generator_inputs,
+      generated_data,
+      generator_variables,
+      gen_scope,
+      generator_fn,
+      real_data,
+      dis_real_outputs,
+      dis_gen_outputs,
+      discriminator_variables,
+      disc_scope,
+      lambda x, y: discriminator_fn(x, y)[0],  # conform to non-InfoGAN API
+      structured_generator_inputs,
+      predicted_distributions,
+      visual_features)
+
+
+
+
+
+
 def acgan_model(
     # Lambdas defining models.
     generator_fn,
@@ -335,6 +439,7 @@ def gan_loss(
     gradient_penalty_weight=None,
     gradient_penalty_epsilon=1e-10,
     mutual_information_penalty_weight=None,
+    visual_feature_regularizer_weight=None,
     aux_cond_generator_weight=None,
     aux_cond_discriminator_weight=None,
     # Options.
@@ -378,6 +483,8 @@ def gan_loss(
                                                       'gradient_penalty_weight')
   mutual_information_penalty_weight = _validate_aux_loss_weight(
       mutual_information_penalty_weight, 'infogan_weight')
+  visual_feature_regularizer_weight = _validate_aux_loss_weight(
+      visual_feature_regularizer_weight, 'Megan_weight')
   aux_cond_generator_weight = _validate_aux_loss_weight(
       aux_cond_generator_weight, 'aux_cond_generator_weight')
   aux_cond_discriminator_weight = _validate_aux_loss_weight(
@@ -385,10 +492,10 @@ def gan_loss(
 
   # Verify configuration for mutual information penalty
   if (_use_aux_loss(mutual_information_penalty_weight) and
-      not isinstance(model, namedtuples.InfoGANModel)):
+      not (isinstance(model, namedtuples.InfoGANModel) or isinstance(mode, namedtuples.MeGANModel))):
     raise ValueError(
         'When `mutual_information_penalty_weight` is provided, `model` must be '
-        'an `InfoGANModel`. Instead, was %s.' % type(model))
+        'an `InfoGANModel` or `MoGANModel`. Instead, was %s.' % type(model))
 
   # Verify configuration for mutual auxiliary condition loss (ACGAN).
   if ((_use_aux_loss(aux_cond_generator_weight) or
@@ -413,6 +520,10 @@ def gan_loss(
         model, add_summaries=add_summaries)
     dis_loss += mutual_information_penalty_weight * info_loss
     gen_loss += mutual_information_penalty_weight * info_loss
+  if _use_aux_loss(visual_feature_regularizer_weight):
+    megan_loss = tfgan_losses.visual_feature_regularizer(model, add_summaries=add_summaries)
+    dis_loss += visual_feature_regularizer_weight * megan_loss
+    gen_loss += visual_feature_regularizer_weight * megan_loss
   if _use_aux_loss(aux_cond_generator_weight):
     ac_gen_loss = tfgan_losses.acgan_generator_loss(
         model, add_summaries=add_summaries)
