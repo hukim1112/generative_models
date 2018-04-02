@@ -11,6 +11,7 @@ import time
 import functools
 import os
 import tensorflow as tf
+import cv2
 
 # Main TFGAN library.
 tfgan = tf.contrib.gan
@@ -25,9 +26,12 @@ from visualization import visual_gan
 from models.gan import megan
 import argparse
 
+import gan_train
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--checkpoint_path')
 parser.add_argument('--dataset_path')
+parser.add_argument('--visual_feature_path')
 args = parser.parse_args()
 batch_size = 128
 checkpoint_path = args.checkpoint_path
@@ -56,8 +60,8 @@ with tf.Graph().as_default():
 	#Todo : take images for visual feature information
 	#complete!
 
-	visual_feature = {'rotation' : ['left', 'right'], 'width':['narrow', 'thick']}
-	visual_feature_path = '/home/dan/prj/lab/datasets/visual_feature_samples_multinumber'
+	visual_feature = {'rotation' : ['left', 'right'], 'width':['left', 'right']}
+	#visual_feature_path = '/home/dan/prj/lab/datasets/visual_feature_samples_multinumber'
 	visual_feature_images = {}
 
 	for key in visual_feature.keys():
@@ -66,8 +70,9 @@ with tf.Graph().as_default():
 			visual_feature_images[key][attribute] = []
 			path = os.path.join(visual_feature_path, key, attribute)
 			for img in os.listdir(path):
-				image = cv2.imread(os.path.join(path, img))
-				image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+				sample = cv2.imread(os.path.join(path, img))
+				sample = cv2.cvtColor(sample, cv2.COLOR_BGR2GRAY)
+				sample = (tf.to_float(sample) - 128.0) / 128.0
 				visual_feature_images[key][attribute].append(image)
 
 	# Sanity check that we're getting images.
@@ -90,19 +95,19 @@ with tf.Graph().as_default():
 	unstructured_inputs, structured_inputs = megan.get_infogan_noise(
 	    batch_size, cat_dim, cont_dim, noise_dims)
 
-	megan_model = tfgan.megan_model(
+	megan_model = gan_train.megan_model(
 	    generator_fn=generator_fn,
 	    discriminator_fn=discriminator_fn,
 	    real_data=images,
 	    unstructured_generator_inputs=unstructured_inputs,
 	    structured_generator_inputs=structured_inputs,
-	    visual_feature = visual_feature_images)
+	    visual_feature_images = visual_feature_images)
 
 
 
 	#Todo : I need to design loss function for megan
 	#3. training op
-	megan_loss = tfgan.gan_loss(
+	megan_loss = gan_train.gan_loss(
 	    megan_model,
 	    gradient_penalty_weight=1.0,
 	    mutual_information_penalty_weight=1.0,
@@ -112,7 +117,7 @@ with tf.Graph().as_default():
 	visual_gan.evaluate_tfgan_loss(megan_loss)
 	generator_optimizer = tf.train.AdamOptimizer(0.001, beta1=0.5)
 	discriminator_optimizer = tf.train.AdamOptimizer(0.00009, beta1=0.5)
-	gan_train_ops = tfgan.gan_train_ops(
+	gan_train_ops = gan_train.gan_train_ops(
 	    infogan_model,
 	    megan_loss,
 	    generator_optimizer,
@@ -121,7 +126,7 @@ with tf.Graph().as_default():
 	#4. Session run learning op
 
 	global_step = tf.train.get_or_create_global_step()
-	train_step_fn = tfgan.get_sequential_train_steps()
+	train_step_fn = gan_train.get_sequential_train_steps()
 	loss_values, mnist_score_values  = [], []
 	saver = tf.train.Saver()
 

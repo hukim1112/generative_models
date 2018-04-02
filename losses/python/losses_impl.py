@@ -816,19 +816,17 @@ def visual_feature_regularizer(
   #mutual information between visual feature and normal distribution to have myu 1 or -1
   # Calculate the negative log-likelihood of the reconstructed noise.
 
-  # log_probs = [math_ops.reduce_mean(dist.log_prob(noise)) for dist, noise in
-  #              zip(predicted_distributions, structured_generator_inputs)]
-  
-  
 
-  loss = -1 * losses.compute_weighted_loss(
-      log_probs, weights, scope, loss_collection=loss_collection,
-      reduction=reduction)
+  for key in visual_features.keys():
+    label = tf.ones_like(visual_features[key]['left'])
+    loss[key] =  losses.mean_squared_error(labels=-label, predictions=visual_features[key]['left'], weights, scope, loss_collection=loss_collection, reduction=reduction) + losses.mean_squared_error(labels=label, predictions=visual_features[key]['right'], weights, scope, loss_collection=loss_collection, reduction=reduction)
+
 
   if add_summaries:
-    summary.scalar('megan_loss', loss)
+    for key in loss.keys():
+      summary.scalar(key + '_loss', loss[key])
 
-  return loss
+  return loss['rotation'] + loss['width']
 
 
 def _numerically_stable_global_norm(tensor_list):

@@ -227,9 +227,9 @@ def megan_model(
     unstructured_generator_inputs,
     structured_generator_inputs,
     # Optional scopes.
+    visual_feature_images,
     generator_scope='Generator',
-    discriminator_scope='Discriminator',
-    visual_feature_images):
+    discriminator_scope='Discriminator'):
   """Returns an InfoGAN model outputs and variables.
 
   See https://arxiv.org/abs/1606.03657 for more details.
@@ -278,16 +278,19 @@ def megan_model(
     dis_real_outputs, _ , _ = discriminator_fn(real_data, generator_inputs)
 
   #visual feature for disentangled representation variance
-  with variable_scope.variable_scope(disc_scope, reuse=True):
+  with variable_scope.variable_scope(discriminator_scope, reuse=True):
     visual_features = {}
     i = 0
     for key in visual_feature_images.keys():
       visual_features[key] = {}
-      for attribute in visual_feature_images[key].keys()
+      for attribute in visual_feature_images[key].keys():
         visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
         #convert image to tensor
         _, _, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
         visual_features[key][attribute] = mu_cont[i]
+
+      #next Disentangled representation
+      i = i + 1
 
 
   if not generated_data.get_shape().is_compatible_with(real_data.get_shape()):
@@ -523,7 +526,7 @@ def gan_loss(
   if _use_aux_loss(visual_feature_regularizer_weight):
     megan_loss = tfgan_losses.visual_feature_regularizer(model, add_summaries=add_summaries)
     dis_loss += visual_feature_regularizer_weight * megan_loss
-    gen_loss += visual_feature_regularizer_weight * megan_loss
+    #gen_loss += visual_feature_regularizer_weight * megan_loss
   if _use_aux_loss(aux_cond_generator_weight):
     ac_gen_loss = tfgan_losses.acgan_generator_loss(
         model, add_summaries=add_summaries)
