@@ -32,8 +32,8 @@ from __future__ import division
 from __future__ import print_function
 
 from tensorflow.contrib.framework.python.ops import variables as variables_lib
-from tensorflow.contrib.gan.python import losses as tfgan_losses
-from tensorflow.contrib.gan.python import namedtuples
+from losses.python import losses_impl as tfgan_losses
+import namedtuples
 from tensorflow.contrib.slim.python.slim import learning as slim_learning
 from tensorflow.contrib.training.python.training import training
 from tensorflow.python.framework import ops
@@ -273,24 +273,34 @@ def megan_model(
     dis_gen_outputs, predicted_distributions, _ = discriminator_fn(
         generated_data, generator_inputs)
   _validate_distributions(predicted_distributions, structured_generator_inputs)
+
   with variable_scope.variable_scope(disc_scope, reuse=True):
     real_data = ops.convert_to_tensor(real_data)
     dis_real_outputs, _ , _ = discriminator_fn(real_data, generator_inputs)
 
-  #visual feature for disentangled representation variance
-  with variable_scope.variable_scope(discriminator_scope, reuse=True):
+  with variable_scope.variable_scope(disc_scope, reuse=True):
     visual_features = {}
-    i = 0
-    for key in visual_feature_images.keys():
-      visual_features[key] = {}
-      for attribute in visual_feature_images[key].keys():
-        visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
-        #convert image to tensor
-        _, _, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
-        visual_features[key][attribute] = mu_cont[i]
+    visual_features['rotation'] = {}
+    
 
-      #next Disentangled representation
-      i = i + 1
+    _, _, [logits_cat, mu_cont] = discriminator_fn(ops.convert_to_tensor(visual_feature_images['rotation']['left']), generator_inputs)
+    visual_features['rotation']['left'] = mu_cont[0]
+
+
+  #visual feature for disentangled representation variance
+  # with variable_scope.variable_scope(discriminator_scope, reuse=True):
+  #   visual_features = {}
+  #   i = 0
+  #   for key in visual_feature_images.keys():
+  #     visual_features[key] = {}
+  #     for attribute in visual_feature_images[key].keys():
+  #       visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
+  #       #convert image to tensor
+  #       _, _, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
+  #       visual_features[key][attribute] = mu_cont[i]
+
+  #     #next Disentangled representation
+  #     i = i + 1
 
 
   if not generated_data.get_shape().is_compatible_with(real_data.get_shape()):
@@ -303,7 +313,7 @@ def megan_model(
   discriminator_variables = variables_lib.get_trainable_variables(
       disc_scope)
 
-  return namedtuples.InfoGANModel(
+  return namedtuples.MEGANModel(
       generator_inputs,
       generated_data,
       generator_variables,
@@ -315,9 +325,10 @@ def megan_model(
       discriminator_variables,
       disc_scope,
       lambda x, y: discriminator_fn(x, y)[0],  # conform to non-InfoGAN API
+      visual_features
       structured_generator_inputs,
       predicted_distributions,
-      visual_features)
+      )
 
 
 
@@ -495,7 +506,7 @@ def gan_loss(
 
   # Verify configuration for mutual information penalty
   if (_use_aux_loss(mutual_information_penalty_weight) and
-      not (isinstance(model, namedtuples.InfoGANModel) or isinstance(mode, namedtuples.MeGANModel))):
+      not (isinstance(model, namedtuples.InfoGANModel) or isinstance(model, namedtuples.MEGANModel))):
     raise ValueError(
         'When `mutual_information_penalty_weight` is provided, `model` must be '
         'an `InfoGANModel` or `MoGANModel`. Instead, was %s.' % type(model))

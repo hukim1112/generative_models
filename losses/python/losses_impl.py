@@ -66,6 +66,7 @@ __all__ = [
     'wasserstein_generator_loss',
     'wasserstein_gradient_penalty',
     'mutual_information_penalty',
+    'visual_feature_regularizer',
     'combine_adversarial_loss',
 ]
 
@@ -97,8 +98,7 @@ def wasserstein_generator_loss(
   Returns:
     A loss Tensor. The shape depends on `reduction`.
   """
-  with ops.name_scope(scope, 'generator_wasserstein_loss', (
-      discriminator_gen_outputs, weights)) as scope:
+  with ops.name_scope(scope, 'generator_wasserstein_loss', (discriminator_gen_outputs, weights)) as scope:
     discriminator_gen_outputs = math_ops.to_float(discriminator_gen_outputs)
 
     loss = - discriminator_gen_outputs
@@ -819,7 +819,7 @@ def visual_feature_regularizer(
 
   for key in visual_features.keys():
     label = tf.ones_like(visual_features[key]['left'])
-    loss[key] =  losses.mean_squared_error(labels=-label, predictions=visual_features[key]['left'], weights, scope, loss_collection=loss_collection, reduction=reduction) + losses.mean_squared_error(labels=label, predictions=visual_features[key]['right'], weights, scope, loss_collection=loss_collection, reduction=reduction)
+    loss[key] =  losses.mean_squared_error(-label, visual_features[key]['left'], weights, scope, loss_collection=loss_collection, reduction=reduction) + losses.mean_squared_error(label, visual_features[key]['right'], weights, scope, loss_collection=loss_collection, reduction=reduction)
 
 
   if add_summaries:

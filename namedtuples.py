@@ -92,7 +92,26 @@ class InfoGANModel(
       recognizer, and used to evaluate the likelihood of the structured noise.
       List length should match `structured_generator_inputs`.
   """
+# TODO(joelshor): Have this class inherit from `GANModel`.
 
+class MEGANModel(
+    collections.namedtuple('MEGANModel', GANModel._fields + (
+        'visual_feature_images',
+        'structured_generator_inputs',
+        'predicted_distributions',
+    ))):
+  """An InfoGANModel contains all the pieces needed for InfoGAN training.
+
+  See https://arxiv.org/abs/1606.03657 for more details.
+
+  Args:
+    structured_generator_inputs: A list of Tensors representing the random noise
+      that must  have high mutual information with the generator output. List
+      length should match `predicted_distributions`.
+    predicted_distributions: A list of tf.Distributions. Predicted by the
+      recognizer, and used to evaluate the likelihood of the structured noise.
+      List length should match `structured_generator_inputs`.
+  """
 
 class ACGANModel(
     collections.namedtuple('ACGANModel', GANModel._fields +
