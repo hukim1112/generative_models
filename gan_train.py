@@ -30,7 +30,7 @@ corresponds to one of the steps.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
+import tensorflow as tf
 from tensorflow.contrib.framework.python.ops import variables as variables_lib
 from losses.python import losses_impl as tfgan_losses
 import namedtuples
@@ -278,29 +278,29 @@ def megan_model(
     real_data = ops.convert_to_tensor(real_data)
     dis_real_outputs, _ , _ = discriminator_fn(real_data, generator_inputs)
 
-  with variable_scope.variable_scope(disc_scope, reuse=tf.Auto_REUSE):
-    visual_features = {}
-    visual_features['rotation'] = {}
+  # with variable_scope.variable_scope(disc_scope, reuse=tf.Auto_REUSE):
+  #   visual_features = {}
+  #   visual_features['rotation'] = {}
     
 
-    _, _, [logits_cat, mu_cont] = discriminator_fn(ops.convert_to_tensor(visual_feature_images['rotation']['left']), generator_inputs)
-    visual_features['rotation']['left'] = mu_cont[0]
+  #   _, _, [logits_cat, mu_cont] = discriminator_fn(ops.convert_to_tensor(visual_feature_images['rotation']['left']), generator_inputs)
+  #   visual_features['rotation']['left'] = mu_cont[0]
 
 
-  #visual feature for disentangled representation variance
-  # with variable_scope.variable_scope(discriminator_scope, reuse=True):
-  #   visual_features = {}
-  #   i = 0
-  #   for key in visual_feature_images.keys():
-  #     visual_features[key] = {}
-  #     for attribute in visual_feature_images[key].keys():
-  #       visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
-  #       #convert image to tensor
-  #       _, _, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
-  #       visual_features[key][attribute] = mu_cont[i]
+  visual feature for disentangled representation variance
+  with variable_scope.variable_scope(discriminator_scope, reuse=True):
+    visual_features = {}
+    i = 0
+    for key in visual_feature_images.keys():
+      visual_features[key] = {}
+      for attribute in visual_feature_images[key].keys():
+        visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
+        #convert image to tensor
+        _, _, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
+        visual_features[key][attribute] = mu_cont[i]
 
-  #     #next Disentangled representation
-  #     i = i + 1
+      #next Disentangled representation
+      i = i + 1
 
 
   if not generated_data.get_shape().is_compatible_with(real_data.get_shape()):
