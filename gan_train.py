@@ -32,7 +32,8 @@ from __future__ import division
 from __future__ import print_function
 import tensorflow as tf
 from tensorflow.contrib.framework.python.ops import variables as variables_lib
-from losses.python import losses_impl as tfgan_losses
+from losses.python import losses_impl as megan_losses
+from tensorflow.contrib.gan.python import losses as tfgan_losses
 import namedtuples
 from tensorflow.contrib.slim.python.slim import learning as slim_learning
 from tensorflow.contrib.training.python.training import training
@@ -270,15 +271,15 @@ def megan_model(
         unstructured_generator_inputs + structured_generator_inputs)
     generated_data = generator_fn(generator_inputs)
   with variable_scope.variable_scope(discriminator_scope) as disc_scope:
-    dis_gen_outputs, predicted_distributions, gar_1 = discriminator_fn(
+    dis_gen_outputs, predicted_distributions, not_use = discriminator_fn(
         generated_data, generator_inputs)
-    print(dis_gen_outputs.shape)
+    
 
   _validate_distributions(predicted_distributions, structured_generator_inputs)
 
   with variable_scope.variable_scope(disc_scope, reuse=True):
     real_data = ops.convert_to_tensor(real_data)
-    dis_real_outputs, gar_2 , gar_3 = discriminator_fn(real_data, generator_inputs)
+    dis_real_outputs, _ , not_use2= discriminator_fn(real_data, generator_inputs)
 
   # with variable_scope.variable_scope(disc_scope, reuse=tf.Auto_REUSE):
   #   visual_features = {}
@@ -298,7 +299,7 @@ def megan_model(
       for attribute in visual_feature_images[key].keys():
         visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
         #convert image to tensor
-        gar_4, gar_5, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
+        not_use3, not_use4, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
         visual_features[key][attribute] = mu_cont[i]
 
       #next Disentangled representation
@@ -537,7 +538,7 @@ def gan_loss(
     dis_loss += mutual_information_penalty_weight * info_loss
     gen_loss += mutual_information_penalty_weight * info_loss
   if _use_aux_loss(visual_feature_regularizer_weight):
-    megan_loss = tfgan_losses.visual_feature_regularizer(model, add_summaries=add_summaries)
+    megan_loss = megan_losses.visual_feature_regularizer(model, add_summaries=add_summaries)
     dis_loss += visual_feature_regularizer_weight * megan_loss
     #gen_loss += visual_feature_regularizer_weight * megan_loss
   if _use_aux_loss(aux_cond_generator_weight):

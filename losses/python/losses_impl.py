@@ -37,7 +37,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-
+import tensorflow as tf
 from tensorflow.contrib.framework.python.ops import variables as contrib_variables_lib
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import tensor_util
@@ -783,7 +783,7 @@ def mutual_information_penalty(
 def visual_feature_regularizer(
     # structured_generator_inputs,
     # predicted_distributions,
-    visual_features,
+    model,
     weights=1.0,
     scope=None,
     loss_collection=ops.GraphKeys.LOSSES,
@@ -816,7 +816,8 @@ def visual_feature_regularizer(
   #mutual information between visual feature and normal distribution to have myu 1 or -1
   # Calculate the negative log-likelihood of the reconstructed noise.
 
-
+  visual_features = model.visual_features
+  loss = {}
   for key in visual_features.keys():
     label = tf.ones_like(visual_features[key]['left'])
     loss[key] =  losses.mean_squared_error(-label, visual_features[key]['left'], weights, scope, loss_collection=loss_collection, reduction=reduction) + losses.mean_squared_error(label, visual_features[key]['right'], weights, scope, loss_collection=loss_collection, reduction=reduction)

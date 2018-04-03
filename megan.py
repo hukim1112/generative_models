@@ -104,7 +104,15 @@ with tf.Graph().as_default():
 	    structured_generator_inputs=structured_inputs
 	    )
 
+	# from tensorflow.python.ops import math_ops
+	# print(dir(megan_model))
 
+	# with tf.Session() as sess:
+	# 	sess.run(tf.global_variables_initializer())
+	# 	with slim.queues.QueueRunners(sess):
+	# 		print(sess.run(math_ops.to_float(megan_model.discriminator_gen_outputs)))
+
+		
 
 	#Todo : I need to design loss function for megan
 	#3. training op
@@ -119,7 +127,7 @@ with tf.Graph().as_default():
 	generator_optimizer = tf.train.AdamOptimizer(0.001, beta1=0.5)
 	discriminator_optimizer = tf.train.AdamOptimizer(0.00009, beta1=0.5)
 	gan_train_ops = gan_train.gan_train_ops(
-	    infogan_model,
+	    megan_model,
 	    megan_loss,
 	    generator_optimizer,
 	    discriminator_optimizer)

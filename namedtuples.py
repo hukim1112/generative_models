@@ -29,6 +29,7 @@ import collections
 __all__ = [
     'GANModel',
     'InfoGANModel',
+    'MEGANModel',
     'ACGANModel',
     'GANLoss',
     'GANTrainOps',
@@ -96,7 +97,7 @@ class InfoGANModel(
 
 class MEGANModel(
     collections.namedtuple('MEGANModel', GANModel._fields + (
-        'visual_feature_images',
+        'visual_features',
         'structured_generator_inputs',
         'predicted_distributions',
     ))):
