@@ -99,9 +99,10 @@ with tf.Graph().as_default():
 	    generator_fn=generator_fn,
 	    discriminator_fn=discriminator_fn,
 	    real_data=images,
+	    visual_feature_images = visual_feature_images,
 	    unstructured_generator_inputs=unstructured_inputs,
-	    structured_generator_inputs=structured_inputs,
-	    visual_feature_images = visual_feature_images)
+	    structured_generator_inputs=structured_inputs
+	    )
 
 
 

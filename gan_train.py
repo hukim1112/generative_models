@@ -270,13 +270,15 @@ def megan_model(
         unstructured_generator_inputs + structured_generator_inputs)
     generated_data = generator_fn(generator_inputs)
   with variable_scope.variable_scope(discriminator_scope) as disc_scope:
-    dis_gen_outputs, predicted_distributions, _ = discriminator_fn(
+    dis_gen_outputs, predicted_distributions, gar_1 = discriminator_fn(
         generated_data, generator_inputs)
+    print(dis_gen_outputs.shape)
+
   _validate_distributions(predicted_distributions, structured_generator_inputs)
 
   with variable_scope.variable_scope(disc_scope, reuse=True):
     real_data = ops.convert_to_tensor(real_data)
-    dis_real_outputs, _ , _ = discriminator_fn(real_data, generator_inputs)
+    dis_real_outputs, gar_2 , gar_3 = discriminator_fn(real_data, generator_inputs)
 
   # with variable_scope.variable_scope(disc_scope, reuse=tf.Auto_REUSE):
   #   visual_features = {}
@@ -287,8 +289,8 @@ def megan_model(
   #   visual_features['rotation']['left'] = mu_cont[0]
 
 
-  visual feature for disentangled representation variance
-  with variable_scope.variable_scope(discriminator_scope, reuse=True):
+  #visual feature for disentangled representation variance
+  with variable_scope.variable_scope(discriminator_scope, reuse=tf.AUTO_REUSE):
     visual_features = {}
     i = 0
     for key in visual_feature_images.keys():
@@ -296,7 +298,7 @@ def megan_model(
       for attribute in visual_feature_images[key].keys():
         visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
         #convert image to tensor
-        _, _, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
+        gar_4, gar_5, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
         visual_features[key][attribute] = mu_cont[i]
 
       #next Disentangled representation
