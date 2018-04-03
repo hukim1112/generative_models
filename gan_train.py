@@ -278,7 +278,7 @@ def megan_model(
     real_data = ops.convert_to_tensor(real_data)
     dis_real_outputs, _ , _ = discriminator_fn(real_data, generator_inputs)
 
-  with variable_scope.variable_scope(disc_scope, reuse=True):
+  with variable_scope.variable_scope(disc_scope, reuse=tf.Auto_REUSE):
     visual_features = {}
     visual_features['rotation'] = {}
     
@@ -325,7 +325,7 @@ def megan_model(
       discriminator_variables,
       disc_scope,
       lambda x, y: discriminator_fn(x, y)[0],  # conform to non-InfoGAN API
-      visual_features
+      visual_features,
       structured_generator_inputs,
       predicted_distributions,
       )
