@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 
 def circle(img, center, radius, color, thickness):
@@ -11,12 +12,17 @@ def rectangle(img, topleft, bottomright, color, thickness ):
 	If you want to fill it with the color, thickness should be -1'''
 	cv2.rectangle(img, topleft, bottomright, color, thickness)
 
-def polygon(img, pointlist, color, thickness):
-	'''EX )polygon(img, [[10, 20], [40, 50], [30, 15]], color = (0, 255, 0), thickness =1)
+def polylines(img, pointlist, color, thickness):
+	'''EX )polylines(img, [[10, 20], [40, 50], [30, 15]], color = (0, 255, 0), thickness =1)
 	If you want to fill it with the color, thickness should be -1'''
 	pts = np.array(pointlist, np.int32)
 	pts = pts.reshape((-1, 1, 2))
-	cv2.polylines(img, [pts], True, color)
+	cv2.polylines(img, [pts], True, color, thickness= thickness)
+
+def fillpoly(img, pointlist, color):
+	pts = np.array(pointlist, np.int32)
+	pts = pts.reshape((-1, 1, 2))
+	cv2.fillPoly(img, [pts], color)
 
 def eclipse(img, center, major_axis, minor_axis, angle, color, thickness, start_angle=0, end_angle=360):
 	'''EX )ellipse(img,(256,256),(100,50),0,0,180,255,-1)
