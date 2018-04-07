@@ -85,6 +85,7 @@ with tf.Graph().as_default():
 	    structured_generator_inputs=structured_inputs)
 
 	#4. display generated images
+	display_images = []
 	for noise in display_noises:
 	    with tf.variable_scope(infogan_model.generator_scope, reuse=True):
 	        display_images.append(infogan_model.generator_fn(noise))
