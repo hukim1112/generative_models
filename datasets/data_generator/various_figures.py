@@ -16,7 +16,8 @@ def draw_canvas(image_size=(256, 256, 3), color=None):
 	return canvas
 
 def draw_rectangles(dataset_dir, image_size=(256, 256, 3), color = (255, 0, 0), background = (0, 0, 0), num=10000):
-	os.makedirs(os.path.join(dataset_dir, 'rectangle'), exist_ok = True)
+	path = os.path.join(dataset_dir, 'rectangle')
+	os.makedirs(path, exist_ok = True)
 	for i in range(num):
 		#Make canvas to draw
 		canvas = draw_canvas(image_size, color = background)
@@ -30,15 +31,16 @@ def draw_rectangles(dataset_dir, image_size=(256, 256, 3), color = (255, 0, 0), 
 		height = width * 3
 		pt1 = center[0]-int(width/2), center[1]-int(height/2)
 		pt2 = center[0]+int(width/2), center[1]+int(height/2)
-		print(canvas.shape)	
+
 		#Draw the rectangle into canvas
 		draw.rectangle(canvas, pt1, pt2, color=color, thickness = -1)
 		#transform the image
 		img = transform.rotate(canvas, center, angle, 1, border_color=background)
-		cv2.imwrite(os.path.join(dataset_dir, 'rect_'+str(i)+'.png'), img[:,:,::-1])
+		cv2.imwrite(os.path.join(path, 'rect_'+str(i)+'.png'), img[:,:,::-1])
 
 def draw_eclipses(dataset_dir, image_size=(256, 256, 3), color = (0, 255, 0), background = (0, 0, 0), num=10000):
-	os.makedirs(os.path.join(dataset_dir, 'eclipse'), exist_ok = True)
+	path = os.path.join(dataset_dir, 'eclipse')
+	os.makedirs(path, exist_ok = True)
 	for i in range(num):
 		#Make canvas to draw
 		canvas = draw_canvas(image_size, color = background)
@@ -52,14 +54,16 @@ def draw_eclipses(dataset_dir, image_size=(256, 256, 3), color = (0, 255, 0), ba
 		height = width * 3
 		pt1 = center[0]-int(width/2), center[1]-int(height/2)
 		pt2 = center[0]+int(width/2), center[1]+int(height/2)
+
 		#Draw the rectangle into canvas
 		draw.eclipse(canvas, center, width, height, angle = angle, color=color, thickness = -1)
 		#transform the image
 		
-		cv2.imwrite(os.path.join(dataset_dir, 'eclipse_'+str(i)+'.png'), canvas[:,:,::-1])
+		cv2.imwrite(os.path.join(path, 'eclipse_'+str(i)+'.png'), canvas[:,:,::-1])
 
 def draw_triangles(dataset_dir, image_size=(256, 256, 3), color = (0, 0, 255), background = (0, 0, 0), num=10000):
-	os.makedirs(os.path.join(dataset_dir, 'triangle'), exist_ok = True)
+	path = os.path.join(dataset_dir, 'triangle')
+	os.makedirs(path, exist_ok = True)
 	for i in range(num):
 		#Make canvas to draw
 		canvas = draw_canvas(image_size, color = background)
@@ -75,15 +79,16 @@ def draw_triangles(dataset_dir, image_size=(256, 256, 3), color = (0, 0, 255), b
 		pt2 = (int(center[0]-width/2), int(center[1] + height/2) )
 		pt3 = (int(center[0]+width/2), int(center[1] + height/2) )
 		pt_list = [pt1, pt2, pt3]
+		
 		#Draw the rectangle into canvas
 		draw.fillpoly(canvas, pt_list, color=color)
 		#transform the image
 		img = transform.rotate(canvas, center, angle, 1, border_color=background)
-		cv2.imwrite(os.path.join(dataset_dir, 'triangle'+str(i)+'.png'), img[:,:,::-1])	
+		cv2.imwrite(os.path.join(path, 'triangle'+str(i)+'.png'), img[:,:,::-1])	
 
 
 
 def run(dataset_dir):
-	draw_rectangles(dataset_dir, num=10)
-	draw_eclipses(dataset_dir, num=10)
-	draw_triangles(dataset_dir, num=10)
+	draw_rectangles(dataset_dir)
+	draw_eclipses(dataset_dir)
+	draw_triangles(dataset_dir)
