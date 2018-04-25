@@ -1,0 +1,2 @@
+from datasets.visual_feature_samples_various_figures import various_figures
+various_figures.run('/home/dan/prj/lab/datasets/visual_feature_samples_various_figures')

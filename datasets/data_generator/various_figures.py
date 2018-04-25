@@ -15,7 +15,7 @@ def draw_canvas(image_size=(256, 256, 3), color=None):
 		canvas[:, :, 2] = color[2]
 	return canvas
 
-def draw_rectangles(dataset_dir, image_size=(256, 256, 3), color = (255, 0, 0), background = (0, 0, 0), num=10000):
+def draw_rectangles(dataset_dir, image_size=(128, 128, 3), color = (200, 50, 50), background = (100, 100, 100), num=10000):
 	path = os.path.join(dataset_dir, 'rectangle')
 	os.makedirs(path, exist_ok = True)
 	for i in range(num):
@@ -24,7 +24,8 @@ def draw_rectangles(dataset_dir, image_size=(256, 256, 3), color = (255, 0, 0), 
 
 		#sample some values for random transformation
 		#And define center and angle
-		random_values = (np.random.rand(2) - 0.5)*2
+		random_values = np.random.normal(loc=0, scale = 0.5, size=[2])
+		#random_values = (np.random.rand(2) - 0.5)*2
 		center = (int(  image_size[0]/2 + random_values[0]*(image_size[0]/5)  ), int(image_size[1]/2) )
 		angle = random_values[1] * 60
 		width = int(image_size[0]/8)
@@ -38,7 +39,7 @@ def draw_rectangles(dataset_dir, image_size=(256, 256, 3), color = (255, 0, 0), 
 		img = transform.rotate(canvas, center, angle, 1, border_color=background)
 		cv2.imwrite(os.path.join(path, 'rect_'+str(i)+'.png'), img[:,:,::-1])
 
-def draw_eclipses(dataset_dir, image_size=(256, 256, 3), color = (0, 255, 0), background = (0, 0, 0), num=10000):
+def draw_eclipses(dataset_dir, image_size=(128, 128, 3), color = (50, 200, 50), background = (100, 100, 100), num=10000):
 	path = os.path.join(dataset_dir, 'eclipse')
 	os.makedirs(path, exist_ok = True)
 	for i in range(num):
@@ -47,11 +48,12 @@ def draw_eclipses(dataset_dir, image_size=(256, 256, 3), color = (0, 255, 0), ba
 
 		#sample some values for random transformation
 		#And define center and angle
-		random_values = (np.random.rand(2) - 0.5)*2
+		random_values = np.random.normal(loc=0, scale = 0.5, size=[2])
+		#random_values = (np.random.rand(2) - 0.5)*2
 		center = (int(  image_size[0]/2 + random_values[0]*(image_size[0]/5)  ), int(image_size[1]/2) )
 		angle = random_values[1] * 60
-		width = int(image_size[0]/8)
-		height = width * 3
+		width = int(image_size[0]/5)
+		height = width * 2
 		pt1 = center[0]-int(width/2), center[1]-int(height/2)
 		pt2 = center[0]+int(width/2), center[1]+int(height/2)
 
@@ -61,7 +63,7 @@ def draw_eclipses(dataset_dir, image_size=(256, 256, 3), color = (0, 255, 0), ba
 		
 		cv2.imwrite(os.path.join(path, 'eclipse_'+str(i)+'.png'), canvas[:,:,::-1])
 
-def draw_triangles(dataset_dir, image_size=(256, 256, 3), color = (0, 0, 255), background = (0, 0, 0), num=10000):
+def draw_triangles(dataset_dir, image_size=(128, 128, 3), color = (50, 50, 200), background = (100, 100, 100), num=10000):
 	path = os.path.join(dataset_dir, 'triangle')
 	os.makedirs(path, exist_ok = True)
 	for i in range(num):
@@ -70,10 +72,12 @@ def draw_triangles(dataset_dir, image_size=(256, 256, 3), color = (0, 0, 255), b
 
 		#sample some values for random transformation
 		#And define center and angle
-		random_values = (np.random.rand(2) - 0.5)*2
+		random_values = np.random.normal(loc=0, scale = 0.5, size=[2])
+		#random_values = (np.random.rand(2) - 0.5)*2
 		center = (int(  image_size[0]/2 + random_values[0]*(image_size[0]/5)  ), int(image_size[1]/2) )
-		angle = random_values[1] * 60
-		width = int(image_size[0]/8)
+		#angle = random_values[1] * 60
+		angle = 0
+		width = int(image_size[0]/4)
 		height = width * 3
 		pt1 = (center[0], int(center[1]-height/2))
 		pt2 = (int(center[0]-width/2), int(center[1] + height/2) )
@@ -89,6 +93,6 @@ def draw_triangles(dataset_dir, image_size=(256, 256, 3), color = (0, 0, 255), b
 
 
 def run(dataset_dir):
-	draw_rectangles(dataset_dir)
-	draw_eclipses(dataset_dir)
-	draw_triangles(dataset_dir)
+	draw_rectangles(dataset_dir, image_size=(64, 64, 3))
+	draw_eclipses(dataset_dir, image_size=(64, 64, 3))
+	draw_triangles(dataset_dir, image_size=(64, 64, 3))

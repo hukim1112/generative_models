@@ -298,6 +298,8 @@ def megan_model(
       visual_features[key] = {}
       for attribute in visual_feature_images[key].keys():
         visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
+        print(key, ' : ', i)
+
         #convert image to tensor
         not_use3, not_use4, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
         visual_features[key][attribute] = mu_cont[i]

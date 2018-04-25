@@ -47,6 +47,7 @@ def generator(inputs, categorical_dim, weight_decay=2.5e-5):
 
 def discriminator(img, unused_conditioning, weight_decay=2.5e-5,
                           categorical_dim=10, continuous_dim=2):
+
     """InfoGAN discriminator network on MNIST digits.
     
     Based on a paper https://arxiv.org/abs/1606.03657 and their code

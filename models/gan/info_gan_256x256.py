@@ -40,7 +40,7 @@ def generator(inputs, categorical_dim, weight_decay=2.5e-5):
         net = layers.conv2d_transpose(net, 32, [4, 4], stride=2)
         # Make sure that generator output is in the same range as `inputs`
         # ie [-1, 1].
-        net = layers.conv2d(net, 1, 4, normalizer_fn=None, activation_fn=tf.tanh)
+        net = layers.conv2d(net, 3, 4, normalizer_fn=None, activation_fn=tf.tanh)
     
         return net
 
