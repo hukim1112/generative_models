@@ -11,12 +11,12 @@ import argparse
 # checkpoint_path = args.checkpoint_path
 # dataset_path = args.dataset_path
 batch_size = 128
-checkpoint_path = '/home/dan/prj/weights/ex_mnist_1_infogan'
+checkpoint_path = '/home/dan/prj/weights/ex_mnist_4_megan'
 #dataset_path = '/home/dan/prj/datasets/various_figures_64x64'
 #dataset_path = '/home/dan/prj/datasets/various_figures_64x64_no_angle_tri'
 dataset_path = '/home/dan/prj/datasets/mnist'
 #dataset_path = '/home/dan/prj/datasets/various_figures_64x64_gray'
-result_path = '/home/dan/prj/results/ex_mnist_1_infogan'
+result_path = '/home/dan/prj/results/ex_mnist_6_megan'
 
 
 #1. make dataset and tfrecord conversion
@@ -29,7 +29,8 @@ result_path = '/home/dan/prj/results/ex_mnist_1_infogan'
 # tfrecord.run()
 
 #2. training and storing visual results at every 500 iterations
-infogan_mnist.train(checkpoint_path, dataset_path, batch_size, result_path) # training and show result
+megan_mnist.train(checkpoint_path, dataset_path, batch_size, result_path, 2.0) # training and show result
+
 
 
 

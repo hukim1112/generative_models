@@ -98,14 +98,15 @@ class InfoGANModel(
 class MEGANModel(
     collections.namedtuple('MEGANModel', GANModel._fields + (
         'visual_features',
+        'feature_list',
         'structured_generator_inputs',
         'predicted_distributions',
     ))):
-  """An InfoGANModel contains all the pieces needed for InfoGAN training.
-
-  See https://arxiv.org/abs/1606.03657 for more details.
+  """
 
   Args:
+    visual_features : A list of Tensors containing predicted code by Q-network of infogan to visual feature samples
+    feature_list : the lists of visual features we want to handle 
     structured_generator_inputs: A list of Tensors representing the random noise
       that must  have high mutual information with the generator output. List
       length should match `predicted_distributions`.

@@ -779,7 +779,6 @@ def mutual_information_penalty(
 
   return loss
 
-
 def visual_feature_regularizer(
     # structured_generator_inputs,
     # predicted_distributions,
@@ -817,17 +816,27 @@ def visual_feature_regularizer(
   # Calculate the negative log-likelihood of the reconstructed noise.
 
   visual_features = model.visual_features
+  feature_list = model.feature_list
   loss = {}
-  for key in visual_features.keys():
+  for key in [key for key in visual_features.keys() if key in feature_list['continuous'].keys() ]:
     label = tf.ones_like(visual_features[key]['left'])
     loss[key] =  losses.mean_squared_error(-label, visual_features[key]['left'], weights, scope, loss_collection=loss_collection, reduction=reduction) + losses.mean_squared_error(label, visual_features[key]['right'], weights, scope, loss_collection=loss_collection, reduction=reduction)
 
+  for key in [key for key in visual_features.keys() if key in feature_list['discrete'].keys() ]:
+    loss[key] = 0
+    category_num = len(feature_list['discrete'][key])
+    for attribute in feature_list['discrete'][key]:
+      onehot_labels = tf.one_hot( [attribute]*visual_features[key][attribute].shape[1],  category_num)
+      loss[key] += losses.softmax_cross_entropy(onehot_labels, visual_features[key][attribute], weights, 0, scope, loss_collection=loss_collection, reduction=reduction)
+
+      # print(attribute, " : ", [attribute]*visual_features[key][attribute].shape[1])
+      # print(visual_features[key][attribute])
 
   if add_summaries:
     for key in loss.keys():
-      summary.scalar(key + '_loss', loss[key])
+      summary.scalar('loss_'+key, loss[key])
 
-  return loss['rotation'] + loss['width']
+  return loss['rotation'] + loss['width'] + 2*loss['category']
 
 
 def _numerically_stable_global_norm(tensor_list):

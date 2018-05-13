@@ -229,6 +229,7 @@ def megan_model(
     structured_generator_inputs,
     # Optional scopes.
     visual_feature_images,
+    feature_list,
     generator_scope='Generator',
     discriminator_scope='Discriminator'):
   """Returns an InfoGAN model outputs and variables.
@@ -281,33 +282,33 @@ def megan_model(
     real_data = ops.convert_to_tensor(real_data)
     dis_real_outputs, _ , not_use2= discriminator_fn(real_data, generator_inputs)
 
-  # with variable_scope.variable_scope(disc_scope, reuse=tf.Auto_REUSE):
-  #   visual_features = {}
-  #   visual_features['rotation'] = {}
-    
-
-  #   _, _, [logits_cat, mu_cont] = discriminator_fn(ops.convert_to_tensor(visual_feature_images['rotation']['left']), generator_inputs)
-  #   visual_features['rotation']['left'] = mu_cont[0]
-
 
   #visual feature for disentangled representation variance
   with variable_scope.variable_scope(discriminator_scope, reuse=tf.AUTO_REUSE):
     visual_features = {}
     i = 0
-    for key in visual_feature_images.keys():
+    for key in feature_list['continuous'].keys():
       visual_features[key] = {}
       for attribute in visual_feature_images[key].keys():
-        visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
-        print(key, ' : ', i)
+          visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
+          print(key, ' : ', i)
 
-        #convert image to tensor
-        not_use3, not_use4, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
-        visual_features[key][attribute] = mu_cont[i]
+          #convert image to tensor
+          not_use3, not_use4, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
+          visual_features[key][attribute] = mu_cont[i]
 
       #next Disentangled representation
       i = i + 1
 
+    for key in feature_list['discrete'].keys():
+      visual_features[key] = {}
+      for attribute in visual_feature_images[key].keys():
+          visual_feature_images[key][attribute] = ops.convert_to_tensor(visual_feature_images[key][attribute])
 
+          #convert image to tensor
+          not_use3, not_use4, [logits_cat, mu_cont] = discriminator_fn(visual_feature_images[key][attribute], generator_inputs)
+          visual_features[key][attribute] = logits_cat
+          
   if not generated_data.get_shape().is_compatible_with(real_data.get_shape()):
     raise ValueError(
         'Generator output shape (%s) must be the same shape as real data '
@@ -331,6 +332,7 @@ def megan_model(
       disc_scope,
       lambda x, y: discriminator_fn(x, y)[0],  # conform to non-InfoGAN API
       visual_features,
+      feature_list,
       structured_generator_inputs,
       predicted_distributions,
       )

@@ -24,10 +24,12 @@ from datasets.tfrecord_reader import mnist as mnist_reader
 from visualization import visual_gan
 from models.gan import megan as gan_networks
 import argparse
-
+from tensorflow.python.summary import summary
 import gan_train
+
 batch_size = 128
-keys = ['rotation', 'width']
+feature_list = {'discrete' : {'category' : list(range(10))}, 
+				'continuous' : {'rotation' : ['left', 'right'], 'width':['left', 'right']}}
 image_size = [28, 28, 1]
 
 def load_batch(dataset_path, dataset_name, split_name, batch_size=128, image_size=[64, 64, 3]):
@@ -48,7 +50,7 @@ def load_batch(dataset_path, dataset_name, split_name, batch_size=128, image_siz
 		      capacity=2 * batch_size)
 	return dataset, images, labels
 
-def train(checkpoint_path, dataset_path, batch_size, result_path):
+def train(checkpoint_path, dataset_path, batch_size, result_path, weight):
 	with tf.Graph().as_default():
 		
 		#1. Data pipeline
@@ -63,7 +65,7 @@ def train(checkpoint_path, dataset_path, batch_size, result_path):
 		#Todo : take images for visual feature information
 		#complete!
 
-		visual_feature = {'rotation' : ['left', 'right'], 'width':['left', 'right']}
+		visual_feature = {**feature_list['discrete'], **feature_list['continuous']}
 		visual_feature_path = '/home/dan/prj/lab/datasets/visual_feature_samples_multinumber'
 		visual_feature_images = {}
 
@@ -71,7 +73,7 @@ def train(checkpoint_path, dataset_path, batch_size, result_path):
 			visual_feature_images[key] = {}
 			for attribute in visual_feature[key]:
 				visual_feature_images[key][attribute] = []
-				path = os.path.join(visual_feature_path, key, attribute)
+				path = os.path.join(visual_feature_path, key, str(attribute))
 				for img in os.listdir(path):
 					sample = cv2.imread(os.path.join(path, img))
 					sample = cv2.cvtColor(sample, cv2.COLOR_BGR2GRAY)
@@ -100,6 +102,7 @@ def train(checkpoint_path, dataset_path, batch_size, result_path):
 		    discriminator_fn=discriminator_fn,
 		    real_data=images,
 		    visual_feature_images = visual_feature_images,
+		    feature_list = feature_list,
 		    unstructured_generator_inputs=unstructured_inputs,
 		    structured_generator_inputs=structured_inputs
 		    )
@@ -120,7 +123,7 @@ def train(checkpoint_path, dataset_path, batch_size, result_path):
 		    megan_model,
 		    gradient_penalty_weight=1.0,
 		    mutual_information_penalty_weight=1.0,
-		    visual_feature_regularizer_weight=1.5)
+		    visual_feature_regularizer_weight=weight)
 
 		# Sanity check that we can evaluate our losses.
 		visual_gan.evaluate_tfgan_loss(megan_loss)
@@ -139,6 +142,12 @@ def train(checkpoint_path, dataset_path, batch_size, result_path):
 		loss_values, mnist_score_values  = [], []
 		saver = tf.train.Saver()
 
+
+		summary_op = tf.summary.merge_all()
+		print(dir(summary_op))
+		train_writer = tf.summary.FileWriter(checkpoint_path + '/train')
+
+
 		with tf.Session() as sess:
 			sess.run(tf.global_variables_initializer())
 			with slim.queues.QueueRunners(sess):
@@ -153,7 +162,7 @@ def train(checkpoint_path, dataset_path, batch_size, result_path):
 	    																,i, result_path)
 						visual_gan.varying_noise_continuous_ndim(sess, megan_model, 10, 1, unstructured_noise_dims, cont_dim
 	    																,i, result_path)
-
+						train_writer.add_summary(sess.run(summary_op), i)
 					if i % 1000 == 0: 
 						print('Current loss: %f' % cur_loss)
 						if not tf.gfile.Exists(checkpoint_path):
